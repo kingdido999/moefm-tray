@@ -1,14 +1,16 @@
 {
   "name": "moefm-tray",
   "version": "0.0.1",
-  "description": "A little program that plays music from moe.fm.",
+  "description": "moe.fm running on system notification tray.",
   "main": "main.js",
   "dependencies": {
     "moefou": "^0.0.5",
     "node-notifier": "^4.4.0",
     "player": "^0.6.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "electron-prebuilt": "^0.36.0"
+  },
   "scripts": {
     "start": "electron main.js",
     "test": "mocha"
