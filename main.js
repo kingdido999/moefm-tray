@@ -13,7 +13,7 @@ const MenuItem = electron.MenuItem;
 
 const moefou = new Moefou('a8d18630d266f5ad6979c22e18d31ff4056a24105');
 const player = new Player([])
-  .enable('cache');
+  .enable('stream');
 
 /**
  * A state when the player is switching to next song before the song
