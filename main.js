@@ -10,6 +10,7 @@ const app = electron.app;
 const Tray = electron.Tray;
 const Menu = electron.Menu;
 const MenuItem = electron.MenuItem;
+const globalShortcut = electron.globalShortcut;
 const API_KEY = 'a8d18630d266f5ad6979c22e18d31ff4056a24105';
 
 const moefou = new Moefou(API_KEY);
@@ -19,40 +20,27 @@ const player = new Player().enable('stream');
  * A state when the player is switching to next song before the song
  * plays out, it prevents multiple songs playing at the same time
  * caused by clicking 'Next' too frequently.
- * @type {Boolean}
  */
 var isSwitchingSong = false;
 
-var tray = null;
-var menuInit = null;
-var menuPlaying = null;
-var menuPaused = null;
+var tray = null; // App icon on the system tray
+var menuInit = null; // The initial menu
+var menuPlaying = null; // The menu when playing
+var menuPaused = null; // The menu when paused
 
 app.on('ready', function(){
   // initialize tray icon and menu items
-  tray = new Tray('icon.png');
+  initTray();
 
-  menuInit = Menu.buildFromTemplate([
-    menuItems.play,
-    menuItems.quit
-  ]);
-
-  menuPlaying = Menu.buildFromTemplate([
-    menuItems.next,
-    menuItems.pause,
-    menuItems.quit
-  ]);
-
-  menuPaused = Menu.buildFromTemplate([
-    menuItems.next,
-    menuItems.resume,
-    menuItems.quit
-  ]);
-
-  tray.setContextMenu(menuInit);
+  // Register global shortcut listeners
+  registerShortcuts();
 });
 
-// Menu items and event listeners ---------------------------------------------
+app.on('will-quit', function() {
+  globalShortcut.unregisterAll();
+})
+
+// Menu items with event listeners
 const menuItems = {
   play: {
     label: 'Play',
@@ -90,6 +78,55 @@ const menuItems = {
       player.stop();
       app.quit();
     }
+  }
+}
+
+/**
+ * Initilize tray and menu items.
+ */
+function initTray() {
+  tray = new Tray('icon.png');
+
+  menuInit = Menu.buildFromTemplate([
+    menuItems.play,
+    menuItems.quit
+  ]);
+
+  menuPlaying = Menu.buildFromTemplate([
+    menuItems.next,
+    menuItems.pause,
+    menuItems.quit
+  ]);
+
+  menuPaused = Menu.buildFromTemplate([
+    menuItems.next,
+    menuItems.resume,
+    menuItems.quit
+  ]);
+
+  tray.setContextMenu(menuInit);
+}
+
+/**
+ * Register global shortcuts.
+ */
+function registerShortcuts() {
+  var next = globalShortcut.register('ctrl+right', function() {
+    tray.setContextMenu(menuPlaying);
+    nextSong();
+  });
+
+  if (!next) {
+    console.log('ctrl+right registration failed');
+  }
+
+  var pause = globalShortcut.register('ctrl+space', function() {
+    tray.setContextMenu(player.paused ? menuPlaying : menuPaused);
+    player.pause();
+  });
+
+  if (!pause) {
+    console.log('ctrl+space registration failed');
   }
 }
 
