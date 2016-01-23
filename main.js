@@ -11,7 +11,10 @@ const Tray = electron.Tray;
 const Menu = electron.Menu;
 const MenuItem = electron.MenuItem;
 const globalShortcut = electron.globalShortcut;
+const shell = electron.shell;
+const nativeImage = electron.nativeImage;
 const API_KEY = 'a8d18630d266f5ad6979c22e18d31ff4056a24105';
+const PLAY_AT_STARTUP = true;
 
 const moefou = new Moefou(API_KEY);
 const player = new Player().enable('stream');
@@ -26,38 +29,49 @@ var isSwitchingSong = false;
 var tray = null; // App icon on the system tray
 var menuInit = null; // The initial menu
 var menuPlaying = null; // The menu when playing
-var menuPaused = null; // The menu when paused
+
+/**
+ * ----------------------------------------------------------------------------
+ * Electron App Module
+ * ----------------------------------------------------------------------------
+ * The app module is responsible for controlling the application's lifecycle.
+ *
+ */
 
 app.on('ready', function(){
   // initialize tray icon and menu items
   tray = new Tray('icon.png');
-  menuInit = Menu.buildFromTemplate([
-    menuItems.play,
-    menuItems.quit
-  ]);
-  menuPlaying = Menu.buildFromTemplate([
-    menuItems.next,
-    menuItems.pause,
-    menuItems.quit
-  ]);
-  menuPaused = Menu.buildFromTemplate([
-    menuItems.next,
-    menuItems.resume,
-    menuItems.quit
-  ]);
-  tray.setContextMenu(menuInit);
+
+  if (PLAY_AT_STARTUP) {
+    fetchSongs(function() {
+      player.play();
+      registerShortcuts();
+    });
+  } else {
+    menuInit = Menu.buildFromTemplate(menuInitTemplate);
+    tray.setContextMenu(menuInit);
+  }
 });
 
 app.on('will-quit', function() {
   globalShortcut.unregisterAll();
-})
+});
+
+/**
+ * ----------------------------------------------------------------------------
+ * Electron Menu & MenuItems Modules
+ * ----------------------------------------------------------------------------
+ * The menu class is used to create native menus that can be used as
+ * application menus and context menus. Each menu consists of
+ * multiple menu items and each menu item can have a submenu.
+ *
+ */
 
 // Menu items with event listeners
-const menuItems = {
+var menuItems = {
   play: {
     label: 'Play',
     click: function() {
-      tray.setContextMenu(menuPlaying);
       fetchSongs(function() {
         player.play();
         registerShortcuts();
@@ -67,21 +81,12 @@ const menuItems = {
   next: {
     label: 'Next',
     click: function() {
-      tray.setContextMenu(menuPlaying);
       nextSong();
     }
   },
-  pause: {
-    label: 'Pause',
+  toggle: {
+    label: 'Pause / Resume',
     click: function() {
-      tray.setContextMenu(menuPaused);
-      player.pause();
-    }
-  },
-  resume: {
-    label: 'Resume',
-    click: function() {
-      tray.setContextMenu(menuPlaying);
       player.pause();
     }
   },
@@ -91,8 +96,75 @@ const menuItems = {
       player.stop();
       app.quit();
     }
+  },
+  separator: {
+    type: 'separator'
   }
 }
+
+var menuInitTemplate = [
+  menuItems.play,
+  menuItems.quit
+];
+
+var menuPlayingTemplate = [
+  menuItems.separator,
+  menuItems.next,
+  menuItems.toggle,
+  menuItems.quit
+];
+
+/**
+ * ----------------------------------------------------------------------------
+ * Player Event Listeners
+ * ----------------------------------------------------------------------------
+ * A command line player, supports play mp3 both from url and local stream.
+ * https://github.com/guo-yu/player
+ *
+ */
+
+player.on('playing',function(song){
+  console.log('Now playing: ' + song.title);
+  isSwitchingSong = false;
+  let info = song.title + ' ' + (song.artist ? '♫ ' + song.artist : '');
+
+  // show notification panel
+  notifier.notify({
+    'title': 'Now playing: ',
+    'message': info,
+    'icon': path.join(__dirname, 'notify.jpg')
+  });
+
+  // show current song info in the menu, remove the previous song if necessary
+  if (menuPlayingTemplate.length > 4) {
+    menuPlayingTemplate.shift();
+  }
+  menuPlayingTemplate.unshift({
+    label: info,
+    icon: nativeImage.createFromDataURL(song.cover.small),
+    click: function() {
+      shell.openExternal(song.sub_url);
+    }
+  });
+  menuPlaying = Menu.buildFromTemplate(menuPlayingTemplate);
+  tray.setContextMenu(menuPlaying);
+});
+
+player.on('finish', function(current) {
+  console.log('Finished!');
+  nextSong();
+})
+
+player.on('error', function(err){
+  console.log(err);
+});
+
+/**
+ * ----------------------------------------------------------------------------
+ * Functions
+ * ----------------------------------------------------------------------------
+ *
+ */
 
 /**
  * Register global shortcut listeners.
@@ -108,7 +180,6 @@ function registerShortcuts() {
   }
 
   var pause = globalShortcut.register('ctrl+down', function() {
-    tray.setContextMenu(player.paused ? menuPlaying : menuPaused);
     player.pause();
   });
 
@@ -135,8 +206,12 @@ function fetchSongs(callback) {
 
         player.add({
           'src': song.url,
-          'title': song.title,
-          'artist': song.artist
+          'title': song.sub_title,
+          'artist': song.artist,
+          'sub_url': song.sub_url,
+          'cover': {
+            'small': song.cover.small
+          }
         });
       }
 
@@ -150,6 +225,7 @@ function fetchSongs(callback) {
  */
 function nextSong() {
   if (isSwitchingSong) {
+    // If we are in the process of switching to next song, do nothing
     return;
   } else {
     console.log('Next song...');
@@ -177,27 +253,3 @@ function notEnoughSongs() {
 
   return nextIndex >= player.list.length;
 }
-
-// Player event listeners -----------------------------------------------------
-// When start playing a new song
-player.on('playing',function(song){
-  console.log('Now playing: ' + song.title);
-  isSwitchingSong = false;
-
-  // show notification panel
-  notifier.notify({
-    'title': 'Now playing: ',
-    'message': song.title + ' ' + (song.artist ? '♫ ' + song.artist : ''),
-    'icon': path.join(__dirname, 'notify.jpg')
-  });
-});
-
-// When all musics in the list are finished
-player.on('finish', function(current) {
-  console.log('Finished!');
-  nextSong();
-})
-
-player.on('error', function(err){
-  console.log(err);
-});
