@@ -1,6 +1,6 @@
 {
   "name": "moefm-tray",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "moe.fm running on system notification tray.",
   "main": "main.js",
   "dependencies": {

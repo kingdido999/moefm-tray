@@ -39,7 +39,7 @@ var menuPlaying = null; // The menu when playing
 
 app.on('ready', function(){
   // initialize tray icon and menu items
-  tray = new Tray('icon.png');
+  tray = new Tray('asset/icon.png');
 
   if (PLAY_AT_STARTUP) {
     fetchSongs(function() {
@@ -131,7 +131,7 @@ player.on('playing',function(song){
   notifier.notify({
     title: 'Now playing: ',
     message: info,
-    icon: path.join(__dirname, 'notify.jpg')
+    icon: path.join(__dirname, 'asset/notify.jpg')
   });
 
   // show current song info in the menu, remove the previous song if necessary
