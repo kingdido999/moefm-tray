@@ -23,84 +23,65 @@ const player = new Player().enable('stream');
  */
 var isSwitchingSong = false;
 
-var appIcon = null;
+var tray = null;
 var menuInit = null;
 var menuPlaying = null;
 var menuPaused = null;
 
 app.on('ready', function(){
   // initialize tray icon and menu items
-  appIcon = new Tray('icon.png');
+  tray = new Tray('icon.png');
   menuInit = Menu.buildFromTemplate(templateInit);
   menuPlaying = Menu.buildFromTemplate(templatePlaying);
   menuPaused = Menu.buildFromTemplate(templatePaused);
-  appIcon.setContextMenu(menuInit);
+  tray.setContextMenu(menuInit);
 });
 
 // Templates for menu items ---------------------------------------------------
-var templateInit = [
-  {
+
+var menuItems = {
+  play: {
     label: 'Play',
     click: function() {
-      appIcon.setContextMenu(menuPlaying);
+      tray.setContextMenu(menuPlaying);
       fetchSongs(function() {
         player.play();
       });
     }
   },
-  {
-    label: 'Quit',
+  next: {
+    label: 'Next',
     click: function() {
-      app.quit();
+      tray.setContextMenu(menuPlaying);
+      nextSong();
     }
-  }
-];
-
-var templatePlaying = [
-  {
+  },
+  pause: {
     label: 'Pause',
     click: function() {
-      appIcon.setContextMenu(menuPaused);
+      tray.setContextMenu(menuPaused);
       player.pause();
     }
   },
-  {
-    label: 'Next',
-    click: function() {
-      appIcon.setContextMenu(menuPlaying);
-      nextSong();
-    }
-  },
-  {
-    label: 'Quit',
-    click: function() {
-      app.quit();
-    }
-  }
-];
-
-var templatePaused = [
-  {
+  resume: {
     label: 'Resume',
     click: function() {
-      appIcon.setContextMenu(menuPlaying);
+      tray.setContextMenu(menuPlaying);
       player.pause();
     }
   },
-  {
-    label: 'Next',
-    click: function() {
-      appIcon.setContextMenu(menuPlaying);
-      nextSong();
-    }
-  },
-  {
+  quit: {
     label: 'Quit',
     click: function() {
+      player.stop();
       app.quit();
     }
   }
-];
+}
+
+var templateInit = [menuItems.play, menuItems.quit];
+var templatePlaying = [menuItems.pause, menuItems.next, menuItems.quit];
+var templatePaused = [menuItems.resume, menuItems.next, menuItems.quit];
 
 
 // Player event listeners -----------------------------------------------------
