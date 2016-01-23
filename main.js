@@ -14,11 +14,6 @@ const MenuItem = electron.MenuItem;
 const moefou = new Moefou('a8d18630d266f5ad6979c22e18d31ff4056a24105');
 const player = new Player([]);
 
-var appIcon = null;
-var menuInit = null;
-var menuPlaying = null;
-var menuPaused = null;
-
 /**
  * A state when the player is switching to next song before the song
  * plays out, it prevents multiple songs playing at the same time
@@ -27,7 +22,13 @@ var menuPaused = null;
  */
 var isSwitchingSong = false;
 
+var appIcon = null;
+var menuInit = null;
+var menuPlaying = null;
+var menuPaused = null;
+
 app.on('ready', function(){
+  // initialize tray icon and menu items
   appIcon = new Tray('icon.png');
   menuInit = Menu.buildFromTemplate(templateInit);
   menuPlaying = Menu.buildFromTemplate(templatePlaying);
@@ -35,6 +36,7 @@ app.on('ready', function(){
   appIcon.setContextMenu(menuInit);
 });
 
+// Templates for menu items ---------------------------------------------------
 var templateInit = [
   {
     label: 'Play',
@@ -99,6 +101,8 @@ var templatePaused = [
   }
 ];
 
+
+// Player event listeners -----------------------------------------------------
 player.on('playing',function(song){
   console.log('Now playing: ' + song.title);
   isSwitchingSong = false;
@@ -107,7 +111,7 @@ player.on('playing',function(song){
   notifier.notify({
     'title': 'Now playing: ',
     'message': song.title + (song.artist ? ' | ' + song.artist : ''),
-    'icon': path.join(__dirname, 'notify-icon.png')
+    'icon': path.join(__dirname, 'notify-icon.jpeg')
   });
 });
 
