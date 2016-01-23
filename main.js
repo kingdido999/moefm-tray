@@ -31,15 +31,29 @@ var menuPaused = null;
 app.on('ready', function(){
   // initialize tray icon and menu items
   tray = new Tray('icon.png');
-  menuInit = Menu.buildFromTemplate(templateInit);
-  menuPlaying = Menu.buildFromTemplate(templatePlaying);
-  menuPaused = Menu.buildFromTemplate(templatePaused);
+
+  menuInit = Menu.buildFromTemplate([
+    menuItems.play,
+    menuItems.quit
+  ]);
+
+  menuPlaying = Menu.buildFromTemplate([
+    menuItems.next,
+    menuItems.pause,
+    menuItems.quit
+  ]);
+
+  menuPaused = Menu.buildFromTemplate([
+    menuItems.next,
+    menuItems.resume,
+    menuItems.quit
+  ]);
+
   tray.setContextMenu(menuInit);
 });
 
-// Templates for menu items ---------------------------------------------------
-
-var menuItems = {
+// Menu items and event listeners ---------------------------------------------
+const menuItems = {
   play: {
     label: 'Play',
     click: function() {
@@ -78,32 +92,6 @@ var menuItems = {
     }
   }
 }
-
-var templateInit = [menuItems.play, menuItems.quit];
-var templatePlaying = [menuItems.pause, menuItems.next, menuItems.quit];
-var templatePaused = [menuItems.resume, menuItems.next, menuItems.quit];
-
-
-// Player event listeners -----------------------------------------------------
-player.on('playing',function(song){
-  console.log('Now playing: ' + song.title);
-  isSwitchingSong = false;
-
-  // show notification panel
-  notifier.notify({
-    'title': 'Now playing: ',
-    'message': song.title + (song.artist ? ' | ' + song.artist : ''),
-    'icon': path.join(__dirname, 'notify-icon.jpeg')
-  });
-});
-
-player.on('downloading', function(src) {
-  console.log('Downloading...');
-})
-
-player.on('error', function(err){
-  console.log(err);
-});
 
 /**
  * Fetch songs and add them to the music list.
@@ -166,3 +154,24 @@ function notEnoughSongs() {
 
   return nextIndex >= player.list.length;
 }
+
+// Player event listeners -----------------------------------------------------
+player.on('playing',function(song){
+  console.log('Now playing: ' + song.title);
+  isSwitchingSong = false;
+
+  // show notification panel
+  notifier.notify({
+    'title': 'Now playing: ',
+    'message': song.title + (song.artist ? ' | ' + song.artist : ''),
+    'icon': path.join(__dirname, 'notify-icon.jpeg')
+  });
+});
+
+player.on('downloading', function(src) {
+  console.log('Downloading...');
+})
+
+player.on('error', function(err){
+  console.log(err);
+});
