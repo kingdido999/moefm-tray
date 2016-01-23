@@ -144,7 +144,6 @@ function fetchSongs(callback) {
 
       // add songs
       for (var i = 0; i < playlist.length; i++) {
-        console.log('Adding: ' + playlist[i].title);
         let song = playlist[i];
 
         player.add({
@@ -200,10 +199,16 @@ player.on('playing',function(song){
   // show notification panel
   notifier.notify({
     'title': 'Now playing: ',
-    'message': song.title + (song.artist ? ' | ' + song.artist : ''),
+    'message': song.title + ' ' + (song.artist ? '♫ ' + song.artist : ''),
     'icon': path.join(__dirname, 'notify-icon.jpeg')
   });
 });
+
+player.on('finish', function(current) {
+  console.log('Finished!');
+
+  nextSong();
+})
 
 player.on('downloading', function(src) {
   console.log('Downloading...');
