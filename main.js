@@ -46,25 +46,6 @@ app.on('ready', function(){
     menuItems.quit
   ]);
   tray.setContextMenu(menuInit);
-
-  // Register global shortcut listeners
-  var next = globalShortcut.register('ctrl+right', function() {
-    tray.setContextMenu(menuPlaying);
-    nextSong();
-  });
-
-  if (!next) {
-    console.log('ctrl+right registration failed');
-  }
-
-  var pause = globalShortcut.register('ctrl+space', function() {
-    tray.setContextMenu(player.paused ? menuPlaying : menuPaused);
-    player.pause();
-  });
-
-  if (!pause) {
-    console.log('ctrl+space registration failed');
-  }
 });
 
 app.on('will-quit', function() {
@@ -79,6 +60,7 @@ const menuItems = {
       tray.setContextMenu(menuPlaying);
       fetchSongs(function() {
         player.play();
+        registerShortcuts();
       });
     }
   },
@@ -109,6 +91,29 @@ const menuItems = {
       player.stop();
       app.quit();
     }
+  }
+}
+
+/**
+ * Register global shortcut listeners.
+ */
+function registerShortcuts() {
+  var next = globalShortcut.register('ctrl+right', function() {
+    tray.setContextMenu(menuPlaying);
+    nextSong();
+  });
+
+  if (!next) {
+    console.log('ctrl+right (next) registration failed');
+  }
+
+  var pause = globalShortcut.register('ctrl+down', function() {
+    tray.setContextMenu(player.paused ? menuPlaying : menuPaused);
+    player.pause();
+  });
+
+  if (!pause) {
+    console.log('ctrl+down (pause) registration failed');
   }
 }
 
