@@ -14,7 +14,8 @@
   },
   "scripts": {
     "start": "electron main.js",
-    "build-linux": "electron-packager . MoefmTray --platform=linux --arch=x64 --version=0.36.0"
+    "build-linux": "electron-packager . MoefmTray --platform=linux --arch=x64 --version=0.36.0",
+    "build-osx": "electron-packager . MoefmTray --platform=darwin --arch=x64 --version=0.36.0"
   },
   "repository": {
     "type": "git",

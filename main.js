@@ -39,7 +39,7 @@ var menuPlaying = null; // The menu when playing
 
 app.on('ready', function(){
   // initialize tray icon and menu items
-  tray = new Tray('asset/icon.png');
+  tray = new Tray(path.join(__dirname, 'asset/icon.png'));
 
   if (PLAY_AT_STARTUP) {
     fetchSongs(function() {
@@ -140,7 +140,6 @@ player.on('playing',function(song){
   }
   menuPlayingTemplate.unshift({
     label: info,
-    icon: nativeImage.createFromDataURL(song.cover.small),
     click: function() {
       shell.openExternal(song.sub_url);
     }
