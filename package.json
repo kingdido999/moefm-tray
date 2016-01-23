@@ -12,8 +12,8 @@
     "electron-prebuilt": "^0.36.0"
   },
   "scripts": {
-    "start": "electron src/main.js",
-    "test": "mocha"
+    "start": "electron main.js",
+    "build-linux": "electron-packager . MoefmTray --platform=linux --arch=x64 --version=0.36.0"
   },
   "repository": {
     "type": "git",
