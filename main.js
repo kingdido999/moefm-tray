@@ -13,10 +13,9 @@ const MenuItem = electron.MenuItem;
 const globalShortcut = electron.globalShortcut;
 const shell = electron.shell;
 const nativeImage = electron.nativeImage;
-const API_KEY = 'a8d18630d266f5ad6979c22e18d31ff4056a24105';
 const PLAY_AT_STARTUP = true;
 
-const moefou = new Moefou(API_KEY);
+const moefou = new Moefou('a8d18630d266f5ad6979c22e18d31ff4056a24105');
 const player = new Player().enable('stream');
 
 /**
@@ -130,9 +129,9 @@ player.on('playing',function(song){
 
   // show notification panel
   notifier.notify({
-    'title': 'Now playing: ',
-    'message': info,
-    'icon': path.join(__dirname, 'notify.jpg')
+    title: 'Now playing: ',
+    message: info,
+    icon: path.join(__dirname, 'notify.jpg')
   });
 
   // show current song info in the menu, remove the previous song if necessary
