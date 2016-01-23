@@ -150,7 +150,6 @@ player.on('playing',function(song){
 });
 
 player.on('finish', function(current) {
-  console.log('Finished!');
   nextSong();
 })
 
@@ -227,7 +226,6 @@ function nextSong() {
     // If we are in the process of switching to next song, do nothing
     return;
   } else {
-    console.log('Next song...');
     isSwitchingSong = true;
 
     if (notEnoughSongs()) {
