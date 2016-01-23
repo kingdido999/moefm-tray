@@ -17,7 +17,7 @@ const moefou = new Moefou(API_KEY);
 const player = new Player().enable('stream');
 
 /**
- * A state when the player is switching to next song before the song
+ * A state when the player is switching to next song before that song
  * plays out, it prevents multiple songs playing at the same time
  * caused by clicking 'Next' too frequently.
  */
@@ -30,10 +30,41 @@ var menuPaused = null; // The menu when paused
 
 app.on('ready', function(){
   // initialize tray icon and menu items
-  initTray();
+  tray = new Tray('icon.png');
+  menuInit = Menu.buildFromTemplate([
+    menuItems.play,
+    menuItems.quit
+  ]);
+  menuPlaying = Menu.buildFromTemplate([
+    menuItems.next,
+    menuItems.pause,
+    menuItems.quit
+  ]);
+  menuPaused = Menu.buildFromTemplate([
+    menuItems.next,
+    menuItems.resume,
+    menuItems.quit
+  ]);
+  tray.setContextMenu(menuInit);
 
   // Register global shortcut listeners
-  registerShortcuts();
+  var next = globalShortcut.register('ctrl+right', function() {
+    tray.setContextMenu(menuPlaying);
+    nextSong();
+  });
+
+  if (!next) {
+    console.log('ctrl+right registration failed');
+  }
+
+  var pause = globalShortcut.register('ctrl+space', function() {
+    tray.setContextMenu(player.paused ? menuPlaying : menuPaused);
+    player.pause();
+  });
+
+  if (!pause) {
+    console.log('ctrl+space registration failed');
+  }
 });
 
 app.on('will-quit', function() {
@@ -78,55 +109,6 @@ const menuItems = {
       player.stop();
       app.quit();
     }
-  }
-}
-
-/**
- * Initilize tray and menu items.
- */
-function initTray() {
-  tray = new Tray('icon.png');
-
-  menuInit = Menu.buildFromTemplate([
-    menuItems.play,
-    menuItems.quit
-  ]);
-
-  menuPlaying = Menu.buildFromTemplate([
-    menuItems.next,
-    menuItems.pause,
-    menuItems.quit
-  ]);
-
-  menuPaused = Menu.buildFromTemplate([
-    menuItems.next,
-    menuItems.resume,
-    menuItems.quit
-  ]);
-
-  tray.setContextMenu(menuInit);
-}
-
-/**
- * Register global shortcuts.
- */
-function registerShortcuts() {
-  var next = globalShortcut.register('ctrl+right', function() {
-    tray.setContextMenu(menuPlaying);
-    nextSong();
-  });
-
-  if (!next) {
-    console.log('ctrl+right registration failed');
-  }
-
-  var pause = globalShortcut.register('ctrl+space', function() {
-    tray.setContextMenu(player.paused ? menuPlaying : menuPaused);
-    player.pause();
-  });
-
-  if (!pause) {
-    console.log('ctrl+space registration failed');
   }
 }
 
@@ -192,6 +174,7 @@ function notEnoughSongs() {
 }
 
 // Player event listeners -----------------------------------------------------
+// When start playing a new song
 player.on('playing',function(song){
   console.log('Now playing: ' + song.title);
   isSwitchingSong = false;
@@ -200,18 +183,14 @@ player.on('playing',function(song){
   notifier.notify({
     'title': 'Now playing: ',
     'message': song.title + ' ' + (song.artist ? '♫ ' + song.artist : ''),
-    'icon': path.join(__dirname, 'notify-icon.jpeg')
+    'icon': path.join(__dirname, 'notify.jpg')
   });
 });
 
+// When all musics in the list are finished
 player.on('finish', function(current) {
   console.log('Finished!');
-
   nextSong();
-})
-
-player.on('downloading', function(src) {
-  console.log('Downloading...');
 })
 
 player.on('error', function(err){
