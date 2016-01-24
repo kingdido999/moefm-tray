@@ -15,7 +15,9 @@ const MenuItem = electron.MenuItem;
 const globalShortcut = electron.globalShortcut;
 const shell = electron.shell;
 const nativeImage = electron.nativeImage;
+
 const PLAY_AT_STARTUP = true;
+const TRAY_ICON = path.join(__dirname, 'asset/icon.png');
 
 const moefou = new Moefou('a8d18630d266f5ad6979c22e18d31ff4056a24105');
 const player = new Player().enable('stream');
@@ -41,7 +43,7 @@ var menuPlaying = null; // The menu when playing
 
 app.on('ready', function(){
   // Initialize tray icon
-  tray = new Tray(path.join(__dirname, 'asset/icon.png'));
+  tray = new Tray(TRAY_ICON);
 
   if (PLAY_AT_STARTUP) {
     // Start playing
