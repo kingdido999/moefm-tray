@@ -6,7 +6,13 @@ This is a little [moe.fm](http://moe.fm/) radio app running on your system notif
 
 ![menu](https://github.com/kingdido999/moefm-tray/raw/master/asset/screenshots/menu.png)
 
-## Install
+## Download
+
+Realease: [OSX](https://github.com/kingdido999/moefm-tray/releases/download/v0.1.0/MoefmTray-darwin-x64.zip) | [Linux](https://github.com/kingdido999/moefm-tray/releases/download/v0.1.0/MoefmTray-linux-x64.zip)
+
+百度云：[OSX](http://pan.baidu.com/s/1c1fPEs4) | [Linux](http://pan.baidu.com/s/1ZipOy)
+
+## Development
 
 Make sure you have installed the latest version of node and npm. To upgrade node and npm,
 
