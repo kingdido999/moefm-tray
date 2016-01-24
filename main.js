@@ -29,7 +29,7 @@ const player = new Player().enable('stream');
 var isSwitchingSong = false;
 
 var tray = null; // App icon on the system tray
-var menu = null; // The menu when playing
+var menu = null;
 
 /**
  * ----------------------------------------------------------------------------
@@ -146,8 +146,13 @@ player.on('playing',function(song){
     }
   };
 
-  // update current song info
-  updateMenuPlaying(menuItem);
+  // Update current song info, remove previous song if necessary
+  if (menuTemplate.length > 4) {
+    menuTemplate.shift();
+  }
+  menuTemplate.unshift(menuItem);
+  menu = Menu.buildFromTemplate(menuTemplate);
+  tray.setContextMenu(menu);
 });
 
 player.on('finish', function(current) {
@@ -164,19 +169,6 @@ player.on('error', function(err){
  * ----------------------------------------------------------------------------
  *
  */
-
-/**
- * Update the menu song info, remove previous song if necessary.
- * @param  {Object} menuItem
- */
-function updateMenuPlaying(menuItem) {
-  if (menuTemplate.length > 4) {
-    menuTemplate.shift();
-  }
-  menuTemplate.unshift(menuItem);
-  menu = Menu.buildFromTemplate(menuTemplate);
-  tray.setContextMenu(menu);
-}
 
 /**
  * Fetch songs and add them to the music list.
