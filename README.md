@@ -1,10 +1,10 @@
-# Moefm Tray 小萌否
+# MoefmTray 小萌否
+
+This is a little [moe.fm](http://moe.fm/) radio app running on your system notification tray. It's cross-platform (OSX, Linux, Windows), I have built OSX and Linux versions successfully. I'd appreciate if someone would like to build it on Windows.
 
 ![notify](https://github.com/kingdido999/moefm-tray/raw/master/asset/screenshots/notify.png)
 
 ![menu](https://github.com/kingdido999/moefm-tray/raw/master/asset/screenshots/menu.png)
-
-This is a little [moe.fm](http://moe.fm/) radio app running on your system notification tray. It's cross-platform (OSX, Linux, Windows), I have built OSX and Linux versions successfully. I'd appreciate if someone would like to build it on Windows.
 
 ## Install
 
@@ -24,8 +24,17 @@ For windows, you can download the latest version [here](https://nodejs.org/en/do
 Clone and cd into this repo, install packages and start the app:
 
 ```bash
+git clone https://github.com/kingdido999/moefm-tray.git
+cd moefm-tray
 npm install
 npm start
+```
+
+## Build
+
+```bash
+npm run build-linux # Build on Linux
+npm run build-osx # Build on OSX
 ```
 
 ## Shortcuts
