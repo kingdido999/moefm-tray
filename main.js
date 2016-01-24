@@ -60,7 +60,7 @@ class Controller {
     player.play();
   }
 
-  toggle() {
+  pause() {
     player.pause();
   }
 
@@ -140,10 +140,10 @@ var menuItems = {
       controller.next();
     }
   },
-  toggle: {
+  pause: {
     label: 'Pause / Resume',
     click: function() {
-      controller.toggle();
+      controller.pause();
     }
   },
   quit: {
@@ -162,7 +162,7 @@ var menuTemplate = [
   // <== A menu item with song info will be inserted here
   menuItems.separator,
   menuItems.next,
-  menuItems.toggle,
+  menuItems.pause,
   menuItems.quit
 ];
 
