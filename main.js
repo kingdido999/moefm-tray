@@ -5,6 +5,8 @@ const Moefou = require('moefou');
 const Player = require('player');
 const notifier = require('node-notifier');
 const path = require('path');
+const request = require('request');
+const fs = require('fs');
 
 const app = electron.app;
 const Tray = electron.Tray;
@@ -38,15 +40,17 @@ var menuPlaying = null; // The menu when playing
  */
 
 app.on('ready', function(){
-  // initialize tray icon and menu items
+  // Initialize tray icon
   tray = new Tray(path.join(__dirname, 'asset/icon.png'));
 
   if (PLAY_AT_STARTUP) {
+    // Start playing
     fetchSongs(function() {
       player.play();
       registerShortcuts();
     });
   } else {
+    // Set initial menu
     menuInit = Menu.buildFromTemplate(menuInitTemplate);
     tray.setContextMenu(menuInit);
   }
@@ -107,6 +111,7 @@ var menuInitTemplate = [
 ];
 
 var menuPlayingTemplate = [
+  // <== A menu item with song info will be inserted here
   menuItems.separator,
   menuItems.next,
   menuItems.toggle,
@@ -126,26 +131,29 @@ player.on('playing',function(song){
   console.log('Now playing: ' + song.title);
   isSwitchingSong = false;
   let info = song.title + ' ' + (song.artist ? '♫ ' + song.artist : '');
+  let filename = 'tmp.jpg';
 
-  // show notification panel
-  notifier.notify({
-    title: 'Now playing: ',
-    message: info,
-    icon: path.join(__dirname, 'asset/notify.jpg')
+  // Download song cover
+  download(song.cover.small, filename, function() {
+    // show notification panel
+    notifier.notify({
+      title: 'Now playing: ',
+      message: info,
+      icon: path.join(__dirname, filename)
+    }, function(error, response) {
+      fs.unlinkSync(filename);
+    });
   });
 
-  // show current song info in the menu, remove the previous song if necessary
-  if (menuPlayingTemplate.length > 4) {
-    menuPlayingTemplate.shift();
-  }
-  menuPlayingTemplate.unshift({
+  let menuItem = {
     label: info,
     click: function() {
       shell.openExternal(song.sub_url);
     }
-  });
-  menuPlaying = Menu.buildFromTemplate(menuPlayingTemplate);
-  tray.setContextMenu(menuPlaying);
+  };
+
+  // update current song info
+  updateMenuPlaying(menuItem);
 });
 
 player.on('finish', function(current) {
@@ -167,22 +175,32 @@ player.on('error', function(err){
  * Register global shortcut listeners.
  */
 function registerShortcuts() {
-  var next = globalShortcut.register('ctrl+right', function() {
+  globalShortcut.register('ctrl+right', function() {
     tray.setContextMenu(menuPlaying);
     nextSong();
   });
 
-  if (!next) {
-    console.log('ctrl+right (next) registration failed');
-  }
-
-  var pause = globalShortcut.register('ctrl+down', function() {
+  globalShortcut.register('ctrl+down', function() {
     player.pause();
   });
 
-  if (!pause) {
-    console.log('ctrl+down (pause) registration failed');
+  globalShortcut.register('ctrl+left', function() {
+    player.stop();
+    app.quit();
+  });
+}
+
+/**
+ * Update the menu song info, remove previous song if necessary.
+ * @param  {Object} menuItem
+ */
+function updateMenuPlaying(menuItem) {
+  if (menuPlayingTemplate.length > 4) {
+    menuPlayingTemplate.shift();
   }
+  menuPlayingTemplate.unshift(menuItem);
+  menuPlaying = Menu.buildFromTemplate(menuPlayingTemplate);
+  tray.setContextMenu(menuPlaying);
 }
 
 /**
@@ -206,9 +224,7 @@ function fetchSongs(callback) {
           'title': song.sub_title,
           'artist': song.artist,
           'sub_url': song.sub_url,
-          'cover': {
-            'small': song.cover.small
-          }
+          'cover': song.cover
         });
       }
 
@@ -248,4 +264,16 @@ function notEnoughSongs() {
     current._id + 1;
 
   return nextIndex >= player.list.length;
+}
+
+/**
+ * Download a file from url.
+ * @param  {String}   uri
+ * @param  {String}   filename
+ * @param  {Function} callback
+ */
+function download(uri, filename, callback) {
+  request.head(uri, function(err, res, body){
+    request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+  });
 }
