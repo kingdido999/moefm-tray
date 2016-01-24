@@ -17,19 +17,72 @@ const shell = electron.shell;
 const nativeImage = electron.nativeImage;
 
 const TRAY_ICON = path.join(__dirname, 'asset/icon.png');
-
 const moefou = new Moefou('a8d18630d266f5ad6979c22e18d31ff4056a24105');
 const player = new Player().enable('stream');
 
-/**
- * A state when the player is switching to next song before that song
- * plays out, it prevents multiple songs playing at the same time
- * caused by clicking 'Next' too frequently.
- */
-var isSwitchingSong = false;
+var tray = null; // Electron Tray module
+var menu = null; // Electron Menu module
+var controller = null; // Music controller
 
-var tray = null; // App icon on the system tray
-var menu = null;
+
+class Controller {
+  constructor() {
+    this.isSwitchingSong = false; // Prevent user from spamming 'Next' button
+  }
+
+  fetch(callback) {
+    console.log('Fetching songs...');
+    moefou.listenPlaylist({}, function(error, body) {
+      if (error) {
+        console.log(error);
+      } else {
+        let playlist = body.response.playlist;
+
+        // Add songs
+        for (var i = 0; i < playlist.length; i++) {
+          let song = playlist[i];
+
+          player.add({
+            'src': song.url,
+            'title': song.sub_title,
+            'artist': song.artist,
+            'sub_url': song.sub_url,
+            'cover': song.cover
+          });
+        }
+
+        callback();
+      }
+    });
+  }
+
+  play() {
+    player.play();
+  }
+
+  toggle() {
+    player.pause();
+  }
+
+  next() {
+    // If we are in the process of switching to next song, do nothing.
+    if (this.isSwitchingSong) return;
+    this.isSwitchingSong = true;
+
+    // If not enough songs, we need to fetch before playing the next song.
+    if (player.playing._id + 1 >= player.list.length) {
+      this.fetch(function() {
+        player.next();
+      });
+    } else {
+      player.next();
+    }
+  }
+
+  stop() {
+    player.stop();
+  }
+}
 
 /**
  * ----------------------------------------------------------------------------
@@ -42,19 +95,20 @@ var menu = null;
 app.on('ready', function(){
   // Initialize tray icon
   tray = new Tray(TRAY_ICON);
+  controller = new Controller();
 
-  fetchSongs(function() {
+  controller.fetch(function() {
     // Start playing
-    player.play();
+    controller.play();
 
     // Create global shortcuts
     globalShortcut.register('ctrl+right', function() {
       tray.setContextMenu(menu);
-      nextSong();
+      controller.next();
     });
 
     globalShortcut.register('ctrl+down', function() {
-      player.pause();
+      controller.pause();
     });
 
     globalShortcut.register('ctrl+left', function() {
@@ -70,7 +124,7 @@ app.on('will-quit', function() {
 
 /**
  * ----------------------------------------------------------------------------
- * Electron Menu & MenuItems Modules
+ * Electron Menu & MenuItem Modules
  * ----------------------------------------------------------------------------
  * The menu class is used to create native menus that can be used as
  * application menus and context menus. Each menu consists of
@@ -83,19 +137,19 @@ var menuItems = {
   next: {
     label: 'Next',
     click: function() {
-      nextSong();
+      controller.next();
     }
   },
   toggle: {
     label: 'Pause / Resume',
     click: function() {
-      player.pause();
+      controller.toggle();
     }
   },
   quit: {
     label: 'Quit',
     click: function() {
-      player.stop();
+      controller.stop();
       app.quit();
     }
   },
@@ -123,7 +177,7 @@ var menuTemplate = [
 
 player.on('playing',function(song){
   console.log('Now playing: ' + song.title);
-  isSwitchingSong = false;
+  controller.isSwitchingSong = false;
   let info = song.title + ' ' + (song.artist ? '♫ ' + song.artist : '');
   let filename = 'tmp.jpg';
 
@@ -156,82 +210,12 @@ player.on('playing',function(song){
 });
 
 player.on('finish', function(current) {
-  nextSong();
+  controller.next();
 })
 
-player.on('error', function(err){
-  console.log(err);
+player.on('error', function(error){
+  console.log(error);
 });
-
-/**
- * ----------------------------------------------------------------------------
- * Functions
- * ----------------------------------------------------------------------------
- *
- */
-
-/**
- * Fetch songs and add them to the music list.
- * @param  {Function} callback
- */
-function fetchSongs(callback) {
-  console.log('Fetching songs...');
-  moefou.listenPlaylist({}, function(error, body) {
-    if (error) {
-      console.log(error);
-    } else {
-      let playlist = body.response.playlist;
-
-      // add songs
-      for (var i = 0; i < playlist.length; i++) {
-        let song = playlist[i];
-
-        player.add({
-          'src': song.url,
-          'title': song.sub_title,
-          'artist': song.artist,
-          'sub_url': song.sub_url,
-          'cover': song.cover
-        });
-      }
-
-      callback();
-    }
-  });
-}
-
-/**
- * Go to next song, fetch songs if necessary.
- */
-function nextSong() {
-  if (isSwitchingSong) {
-    // If we are in the process of switching to next song, do nothing
-    return;
-  } else {
-    isSwitchingSong = true;
-
-    if (notEnoughSongs()) {
-      fetchSongs(function() {
-        player.next();
-      });
-    } else {
-      player.next();
-    }
-  }
-}
-
-/**
- * Check if the list has enough songs.
- * @return {boolean}
- */
-function notEnoughSongs() {
-  let current = player.playing;
-  let nextIndex = player.options.shuffle ?
-    chooseRandom(_.difference(list, [current._id])) :
-    current._id + 1;
-
-  return nextIndex >= player.list.length;
-}
 
 /**
  * Download a file from url.
