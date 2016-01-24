@@ -16,7 +16,6 @@ const globalShortcut = electron.globalShortcut;
 const shell = electron.shell;
 const nativeImage = electron.nativeImage;
 
-const PLAY_AT_STARTUP = true;
 const TRAY_ICON = path.join(__dirname, 'asset/icon.png');
 
 const moefou = new Moefou('a8d18630d266f5ad6979c22e18d31ff4056a24105');
@@ -30,8 +29,7 @@ const player = new Player().enable('stream');
 var isSwitchingSong = false;
 
 var tray = null; // App icon on the system tray
-var menuInit = null; // The initial menu
-var menuPlaying = null; // The menu when playing
+var menu = null; // The menu when playing
 
 /**
  * ----------------------------------------------------------------------------
@@ -45,17 +43,25 @@ app.on('ready', function(){
   // Initialize tray icon
   tray = new Tray(TRAY_ICON);
 
-  if (PLAY_AT_STARTUP) {
+  fetchSongs(function() {
     // Start playing
-    fetchSongs(function() {
-      player.play();
-      registerShortcuts();
+    player.play();
+
+    // Create global shortcuts
+    globalShortcut.register('ctrl+right', function() {
+      tray.setContextMenu(menu);
+      nextSong();
     });
-  } else {
-    // Set initial menu
-    menuInit = Menu.buildFromTemplate(menuInitTemplate);
-    tray.setContextMenu(menuInit);
-  }
+
+    globalShortcut.register('ctrl+down', function() {
+      player.pause();
+    });
+
+    globalShortcut.register('ctrl+left', function() {
+      player.stop();
+      app.quit();
+    });
+  });
 });
 
 app.on('will-quit', function() {
@@ -74,15 +80,6 @@ app.on('will-quit', function() {
 
 // Menu items with event listeners
 var menuItems = {
-  play: {
-    label: 'Play',
-    click: function() {
-      fetchSongs(function() {
-        player.play();
-        registerShortcuts();
-      });
-    }
-  },
   next: {
     label: 'Next',
     click: function() {
@@ -107,12 +104,7 @@ var menuItems = {
   }
 }
 
-var menuInitTemplate = [
-  menuItems.play,
-  menuItems.quit
-];
-
-var menuPlayingTemplate = [
+var menuTemplate = [
   // <== A menu item with song info will be inserted here
   menuItems.separator,
   menuItems.next,
@@ -174,35 +166,16 @@ player.on('error', function(err){
  */
 
 /**
- * Register global shortcut listeners.
- */
-function registerShortcuts() {
-  globalShortcut.register('ctrl+right', function() {
-    tray.setContextMenu(menuPlaying);
-    nextSong();
-  });
-
-  globalShortcut.register('ctrl+down', function() {
-    player.pause();
-  });
-
-  globalShortcut.register('ctrl+left', function() {
-    player.stop();
-    app.quit();
-  });
-}
-
-/**
  * Update the menu song info, remove previous song if necessary.
  * @param  {Object} menuItem
  */
 function updateMenuPlaying(menuItem) {
-  if (menuPlayingTemplate.length > 4) {
-    menuPlayingTemplate.shift();
+  if (menuTemplate.length > 4) {
+    menuTemplate.shift();
   }
-  menuPlayingTemplate.unshift(menuItem);
-  menuPlaying = Menu.buildFromTemplate(menuPlayingTemplate);
-  tray.setContextMenu(menuPlaying);
+  menuTemplate.unshift(menuItem);
+  menu = Menu.buildFromTemplate(menuTemplate);
+  tray.setContextMenu(menu);
 }
 
 /**
