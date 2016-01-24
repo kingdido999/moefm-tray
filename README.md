@@ -1,6 +1,10 @@
 # Moefm Tray 小萌否
 
-This is a cross-platform (Linux, Windows, OSX) [moe.fm](http://moe.fm/) radio app running on your system notification tray.
+![notify](https://github.com/kingdido999/moefm-tray/raw/master/asset/screenshots/notify.png)
+
+![menu](https://github.com/kingdido999/moefm-tray/raw/master/asset/screenshots/menu.png)
+
+This is a little [moe.fm](http://moe.fm/) radio app running on your system notification tray. It's cross-platform (OSX, Linux, Windows), I have built OSX and Linux versions successfully. I'd appreciate if someone would like to build it on Windows.
 
 ## Install
 
