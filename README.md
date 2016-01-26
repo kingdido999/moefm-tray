@@ -1,4 +1,4 @@
-# MoefmTray 小萌否
+# MoefmTray
 
 This is a little [moe.fm](http://moe.fm/) radio app running on your system notification tray. It's cross-platform (OSX, Linux, Windows), I have built OSX and Linux versions successfully. I'd appreciate if someone would like to build it on Windows.
 
