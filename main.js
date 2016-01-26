@@ -179,7 +179,7 @@ player.on('playing',function(song){
   console.log('Now playing: ' + song.title);
   controller.isSwitchingSong = false;
   let info = song.title + ' ' + (song.artist ? '♫ ' + song.artist : '');
-  let filename = 'tmp.jpg';
+  let filename = path.join(__dirname, 'tmp.jpg');
 
   // Download song cover
   download(song.cover.small, filename, function() {
@@ -187,7 +187,7 @@ player.on('playing',function(song){
     notifier.notify({
       title: 'Now playing: ',
       message: info,
-      icon: path.join(__dirname, filename)
+      icon: filename
     }, function(error, response) {
       fs.unlinkSync(filename);
     });
