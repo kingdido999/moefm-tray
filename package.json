@@ -24,11 +24,10 @@
   },
   "keywords": [
     "moefm",
-    "moefou",
     "萌否电台",
     "萌否",
-    "tray",
-    "music"
+    "music",
+    "electron"
   ],
   "author": "Pengcheng Ding",
   "license": "MIT",
